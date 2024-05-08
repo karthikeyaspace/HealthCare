@@ -5,15 +5,21 @@ import csv
 import numpy as np
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 frontend_url = os.environ.get('FRONTEND_URL')
 
 
-model = load('model.joblib')
+model = load('models/model.joblib')
 app = Flask(__name__)
 CORS(app, origins=[frontend_url], methods=['GET', 'POST'])
 
+
+def diseasePred(symptoms):
+    symptoms = np.asarray(symptoms).reshape(1, -1)
+    disease = model.predict(symptoms)
+    return disease
 
 
 @app.route('/params', methods=['GET'])
@@ -28,37 +34,20 @@ def getModelParams():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    X = request.get_json()
-    print(X)
-    X = np.array(X).reshape(1, -1)
-    y_pred = model.predict(X)
-
-    disease = y_pred[0]
-
+    symptoms = request.get_json()
+    print('asdfasdf', symptoms)
+    disease = diseasePred(symptoms)
     with open('data/symptom_Description.csv') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['Disease'] == disease:
                 print(row['Description'])
-                return {'prediction': y_pred.tolist(),'description': row['Description']}
+                return {'prediction': disease.tolist(),'description': row['Description']}
 
     return {'description': 'No description found'}
 
 
 
-@app.route('/description', methods=['POST'])
-def getDescription():
-    disease = request.get_json()   
-    disease = disease['0'] 
-    print(disease)
-    with open('data/symptom_Description.csv') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row['Disease'] == disease:
-                print(row['Description'])
-                return {'description': row['Description']}
-
-    return {'description': 'No description found'}
 
 @app.route('/precaution', methods=['POST'])
 def getPrecaution():

@@ -4,12 +4,14 @@ import { useForm } from 'react-hook-form'
 
 
 export default function Recommendation() {
+    const { register, handleSubmit } = useForm()
+    
     const [params, setParams] = useState()
     const [recommendation, setRecommendation] = useState()
-    const { register, handleSubmit } = useForm()
     const [description, setDescription] = useState()
     const [precautions, setPrecautions] = useState()
     const [gotRecommendation, setGotRecommendation] = useState(false)
+    let [selectedParams, setSelectedParams] = useState([])
 
     useEffect(() => {
         axios.get('http://localhost:5000/params')
@@ -23,21 +25,26 @@ export default function Recommendation() {
 
 
     async function onSubmit(data) {
-        let selectedParams = [];
-
+        console.log(data)
+        let checkBoxParams = []
         Object.keys(data).forEach(key => {
             if (key.startsWith('checkbox-')) {
-                selectedParams.push(data[key] ? 1 : 0);
+                checkBoxParams.push(data[key] ? 1 : 0)
             }
         });
-
+        
+        setSelectedParams(checkBoxParams)
         
         setRecommendation()
         setDescription()
         setPrecautions([])
-        
-        console.log(selectedParams);
+        getPrediction()
 
+    }
+    console.log('rec', recommendation)
+    console.log('des', description)
+
+    async function getPrediction(){
         await axios.post('http://localhost:5000/predict', selectedParams)
             .then(res => {
                 setRecommendation(res.data.prediction)
@@ -48,10 +55,7 @@ export default function Recommendation() {
             })
 
         setGotRecommendation(true)
-
     }
-    console.log('rec', recommendation)
-    console.log('des', description)
 
     function getPrecautions() {
         axios.post('http://localhost:5000/precaution', recommendation )
