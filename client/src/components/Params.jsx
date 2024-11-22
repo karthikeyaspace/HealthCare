@@ -22,7 +22,7 @@ export default function Params(props){
                 <div className="cats flex flex-row flex-wrap w-full gap-2 justify-center mt-12 mb-8 ">
                     {
                         props.symptoms && props.symptoms.map(symptom => (
-                            <div key={symptom} className={`bg-white rounded-lg p-4 hover:cursor-pointer shadow-md ${selectedSymptoms.includes(symptom) ? 'bg-green-500 text-white' : ''}`} onClick={() => handleSympClick(symptom)}>{symptom}</div>
+                            <div key={symptom} className={`rounded-lg p-4 hover:cursor-pointer select-none shadow-md ${selectedSymptoms.includes(symptom) ? 'bg-green-600 text-white' : 'bg-white text-black'}`} onClick={() => handleSympClick(symptom)}>{symptom}</div>
                         ))
                     }
                 </div>

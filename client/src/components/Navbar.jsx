@@ -10,7 +10,7 @@ export default function Navbar() {
                     <img src={logo} alt="" />
                 </div>
                 <div className="">
-                    <Link to='healthcare'>
+                    <Link to='symptomcheck'>
                         <p>Symptome checker</p>
                     </Link>
                 </div>

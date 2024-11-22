@@ -1,121 +1,73 @@
 import { useState, useEffect } from "react"
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
+import left from '../assets/left.svg'
 
 
-export default function Recommendation() {
-    const { register, handleSubmit } = useForm()
-    
-    const [params, setParams] = useState()
-    const [recommendation, setRecommendation] = useState()
-    const [description, setDescription] = useState()
-    const [precautions, setPrecautions] = useState()
-    const [gotRecommendation, setGotRecommendation] = useState(false)
-    let [selectedParams, setSelectedParams] = useState([])
+export default function Recommendation(props) {
+
+    const symptoms = props.selectedSymptoms
+    console.log(symptoms)
+    const [recommendation, setRecommendation] = useState('')
+    const [description, setDescription] = useState('')
+    const [precautions, setPrecautions] = useState([])
 
     useEffect(() => {
-        axios.get('http://localhost:5000/params')
+        axios.post('http://localhost:5000/predict', symptoms)
             .then(res => {
-                setParams(res.data.params)
-            })
-            .catch(err => {
-                console.log(err)
-            })
-    }, [])
-
-
-    async function onSubmit(data) {
-        console.log(data)
-        let checkBoxParams = []
-        Object.keys(data).forEach(key => {
-            if (key.startsWith('checkbox-')) {
-                checkBoxParams.push(data[key] ? 1 : 0)
-            }
-        });
-        
-        setSelectedParams(checkBoxParams)
-        
-        setRecommendation()
-        setDescription()
-        setPrecautions([])
-        getPrediction()
-
-    }
-    console.log('rec', recommendation)
-    console.log('des', description)
-
-    async function getPrediction(){
-        await axios.post('http://localhost:5000/predict', selectedParams)
-            .then(res => {
-                setRecommendation(res.data.prediction)
+                setRecommendation(res.data.recommendation)
                 setDescription(res.data.description)
             })
-            .catch(err => {
-                console.log(err)
-            })
+    }, [])
+    console.log(recommendation)
 
-        setGotRecommendation(true)
-    }
-
-    function getPrecautions() {
-        axios.post('http://localhost:5000/precaution', recommendation )
+    function handlePrecautions() {
+        axios.post('http://localhost:5000/precautions', recommendation)
             .then(res => {
                 setPrecautions(res.data.precautions)
             })
-            .catch(err => {
-                console.log(err)
-            })
-        console.log('pre', precautions)
     }
-
-
     return (
-        <div>
-            <h1>Recommendation</h1>
+        <div className='h-screen flex items-center'>
+            <div className='w-1/2 relative bg-blue-400 min-h-96 mx-auto px-4 rounded-lg flex items-center justify-start flex-col'>
+                <span className="absolute top-4 left-4 w-8 text-white text-4xl cursor-pointer flex" onClick={() => props.setShowCats(true)}> <img src={left} className='w-1/2' alt="" /><p className="text-sm ml-2">Edit symptoms</p> </span>
+                <h1 className='font-semibold text-2xl mt-4'>Recommendation</h1>
+                <div className="cats flex flex-col flex-wrap w-5/6 gap-2 justify-center items-center mt-12 mb-8 ">
+                    <div>
+                        {
+                            recommendation &&
+                            <p className="text-2xl ">{recommendation}</p>
+                        }
+                    </div>
+                    <div>
+                        {
+                            description &&
+                            <p>{description}</p>
+                        }
+                    </div>
+                    <div>
+                        {
+                            recommendation !== "No disease found" &&
+                            <button onClick={handlePrecautions} className="bg-green-500 px-2 py-1 rounded-md text-md border-white/55 border-2">Get precautions</button>
+                        }
+                    </div>
+                    <div>
+                        <ul>
+                            {
+                                precautions && precautions.map((precaution, index) => {
+                                    if (precaution) {
+                                        return <li key={index}>{index + 1}. {precaution}</li>;
+                                    }
+                                    return null;
+                                })
+                            }
 
-            {params &&
+                        </ul>
+                    </div>
+                </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} >
-                    <label>Choose a parameter</label>
-                    {
-                        params && params.map((param, index) => {
-                            return (
-                                <div key={index}>
-                                    <input
-                                        type="checkbox"
-                                        {...register(`checkbox-${index}`)}
-                                        value={param}
-                                    />
-                                    <label>{param}</label>
-                                </div>
-                            )
 
-                        })
-                    }
-
-                    <button type="submit">Get Recommendation</button>
-                </form>
-            }
-            {
-                recommendation &&
-                recommendation.map((r, index) => {
-                    return <p key={index}>{r}</p>
-                })
-            }
-            {
-                description && 
-                <p>{description}</p>
-            }
-            {
-                gotRecommendation &&
-                <button onClick={getPrecautions}>Get precautions</button>
-            }
-            {
-                precautions &&
-                precautions.map((p, index) => {
-                    return <p key={index}>{p}</p>
-                })
-            }
+            </div>
         </div>
     )
 }
